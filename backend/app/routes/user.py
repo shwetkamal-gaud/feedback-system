@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.utils.auth import verify_password, get_db, get_hashed_password
-from app.models.models import User
+from app.models.models import User, Team
 from app.schema import UserCreate, UserLogin, UserOut
 from app.utils.jwt import create_token
 from typing import Optional, cast
@@ -18,11 +18,24 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     user = User(
         email=user_data.email,
         hashed_password=get_hashed_password(user_data.password),
-        role=user_data.role
+        role=user_data.role,
+        name=user_data.name
     )
     db.add(user)
     db.commit()
     db.refresh(user)
+    
+    if user_data.role == "manager":
+        team = Team(name=user_data.team_name, manager_id=user.id)
+        db.add(team)
+        db.commit()
+        db.refresh(team)
+        user.team_id = team.id
+    elif user_data.role == "employee":
+        team = db.query(Team).filter_by(name=user_data.team_name).first()
+        if not team:
+            raise HTTPException(400, "Team does not exist")
+        user.team_id = team.id
     response = JSONResponse(content=UserOut.model_validate(user).model_dump())
     create_token({"user_id": user.id, "role": user.role}, response)
     return response

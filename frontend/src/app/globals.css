@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: 40 56% 96%;
   --foreground: #171717;
 }
 
@@ -14,13 +14,40 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: 0 0% 13%;
     --foreground: #ededed;
   }
 }
 
 body {
-  background: var(--background);
+  background: hsl(var(--background));
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  min-width: 100vw;
+  overflow-x: hidden;
+}
+
+button{
+  cursor: pointer;
+}
+
+*{
+  box-sizing: border-box;
+}
+
+@keyframes slide-in-up {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-up {
+  animation: slide-in-up 0.4s ease-out forwards;
 }
