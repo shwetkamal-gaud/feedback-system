@@ -1,0 +1,33 @@
+# Global
+.env
+*.log
+*.sqlite3
+*.db
+.DS_Store
+__pycache__/
+*.py[cod]
+
+# Node (frontend)
+frontend/node_modules/
+frontend/.env
+frontend/.next
+frontend/dist
+frontend/build
+
+# Python (backend)
+backend/__pycache__/
+backend/*.pyc
+backend/.env
+backend/rbac.db
+backend/venv/
+backend/env/
+backend/.mypy_cache/
+backend/.pytest_cache/
+
+# VSCode
+.vscode/
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
