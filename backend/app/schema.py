@@ -27,7 +27,6 @@ class UserOut(BaseModel):
         "from_attributes": True
     }
 
-
 class FeedbackCreate(BaseModel):
     employee_id: int
     strengths: str
@@ -43,7 +42,7 @@ class FeedbackOut(BaseModel):
     strengths: str
     areas_to_improve: str
     sentiment: str
-    tags: str
+    tags: List[str]
     timestamp: datetime
     acknowledged: bool
     is_anonymous: bool

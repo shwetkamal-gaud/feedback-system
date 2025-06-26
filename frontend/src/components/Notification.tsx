@@ -1,5 +1,7 @@
 'use client'
 
+import { useAuthContext } from '@/context/AuthContext';
+import getBaseUrl from '@/lib/getBaseUrl';
 import React, { useEffect, useState } from 'react'
 
 type NotificationProp = {
@@ -7,19 +9,22 @@ type NotificationProp = {
     message: string;
     is_read: boolean;
 };
-
+const baseUrl = getBaseUrl();
 const Notification = () => {
     const [notifications, setNotifications] = useState<NotificationProp[]>([]);
-
+    const { authUser } = useAuthContext()
     useEffect(() => {
-        fetch("/api/notifications")
-            .then(res => res.json())
-            .then((data: NotificationProp[]) =>
-                setNotifications(data.filter(n => !n.is_read))
-            );
-    }, []);
+        console.log(authUser,"auth")
+        if (authUser?.email) {
+            fetch(`${baseUrl}/notifications`, { credentials: "include" })
+                .then(res => res.json())
+                .then((data: NotificationProp[]) =>
+                    setNotifications(data?.filter(n => !n.is_read))
+                );
+        }
+    }, [authUser]);
     const markAsRead = async (id: number) => {
-        await fetch(`/api/notifications/${id}`, { method: "PATCH" });
+        await fetch(`${baseUrl}/notifications/${id}`, { method: "PATCH", credentials: "include" });
         setNotifications(prev => prev.filter(n => n.id !== id));
     };
 
@@ -56,35 +61,36 @@ const ToastCard = ({
         const interval = setInterval(() => {
             setProgress((prev) => {
                 if (prev <= 0) {
-                    onDismiss();
                     clearInterval(interval);
                     return 0;
                 }
                 return prev - 1;
             });
-        }, 30); 
+        }, 30);
 
         return () => clearInterval(interval);
     }, [hover]);
     return (
-        <div
-            className="bg-white border border-gray-300 shadow-md rounded-lg p-4 w-80 animate-slide-in-up"
+        <>
+        {progress >0 &&<div
+            className=" border border-[#4e3d9b] shadow-md rounded-lg p-4 w-80 animate-slide-in-up"
             onMouseEnter={() => setHover(true)}
             onMouseLeave={() => setHover(false)}
         >
             <p className="text-sm text-gray-800">{message}</p>
-            <div className="flex justify-between items-center mt-2">
-                <button onClick={onDismiss} className="text-blue-600 text-sm hover:underline">
+            <div className="flex flex-col  gap-2 justify-between items-start mt-2">
+                <button onClick={onDismiss} className="text-[#4e3d9b] text-sm hover:underline">
                     Mark as Read
                 </button>
-                <div className="w-24 h-1 bg-gray-200 rounded overflow-hidden">
+                <div className="w-full h-1 bg-gray-200 rounded overflow-hidden">
                     <div
-                        className="bg-blue-500 h-full transition-all"
+                        className="bg-[#4e3d9b] h-full transition-all"
                         style={{ width: `${progress}%` }}
                     ></div>
                 </div>
             </div>
-        </div>
+        </div>}
+        </>
     )
 
 }

@@ -24,18 +24,24 @@ def signup(user_data: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    
     if user_data.role == "manager":
         team = Team(name=user_data.team_name, manager_id=user.id)
         db.add(team)
+        print(team)
         db.commit()
         db.refresh(team)
         user.team_id = team.id
+        db.add(user)
+        db.commit()
+        db.refresh(user)
     elif user_data.role == "employee":
         team = db.query(Team).filter_by(name=user_data.team_name).first()
         if not team:
             raise HTTPException(400, "Team does not exist")
         user.team_id = team.id
+        db.add(user)
+        db.commit()
+        db.refresh(user)
     response = JSONResponse(content=UserOut.model_validate(user).model_dump())
     create_token({"user_id": user.id, "role": user.role}, response)
     return response

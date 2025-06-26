@@ -1,8 +1,12 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Enum, Text
+from sqlalchemy.dialects.postgresql import ARRAY
 from app.database import Base
 import enum
 from datetime import datetime, timezone
 from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Enum as PgEnum
+from sqlalchemy import Boolean
 
 class RoleEnum(str, enum.Enum):
     manager = "manager"
@@ -33,7 +37,7 @@ class Feedback(Base):
     strengths = Column(Text)
     areas_to_improve = Column(Text)
     sentiment = Column(String)
-    tags = Column(String)
+    tags = Column(ARRAY(String))
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     acknowledged = Column(Boolean, default=False)
     is_anonymous = Column(Boolean, default=False)
@@ -51,7 +55,7 @@ class FeedbackRequest(Base):
     id = Column(Integer, primary_key=True)
     employee_id = Column(Integer, ForeignKey("users.id"))
     manager_id = Column(Integer, ForeignKey("users.id"))
-    status = Column(Enum(RequestStatus), default=RequestStatus.pending)
+    status: Mapped[RequestStatus] = mapped_column(PgEnum(RequestStatus), default=RequestStatus.pending)
     message = Column(Text, nullable=True)
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
@@ -60,6 +64,6 @@ class Notification(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     message = Column(String)
-    is_read = Column(Boolean, default=False)
+    is_read: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 

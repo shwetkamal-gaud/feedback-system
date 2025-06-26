@@ -4,7 +4,7 @@ from app.models.models import User, Notification
 from sqlalchemy.orm import Session
 from app.utils.auth import  get_db, get_current_user
 from typing import cast
-router = APIRouter(prefix="/feedback", tags=["Feedback"])
+router = APIRouter(tags=["Notification"])
 
 @router.get("/notifications", response_model=list[NotificationOut])
 def get_notifications(user: User = Depends(get_current_user),
@@ -18,6 +18,6 @@ def mark_notification_read(notif_id: int,
     notif = db.query(Notification).filter_by(id=notif_id, user_id=user.id).first()
     if not notif:
         raise HTTPException(404, detail="Notification not found")
-    notif.is_read = cast(bool, True)
+    notif.is_read = cast(bool, True) #ts:ignore
     db.commit()
     return {"message": "Notification marked as read"}

@@ -17,9 +17,9 @@ const AuthPage = ({ type }: { type: 'login' | 'signup' }) => {
   const [role, setRole] = useState("");
   const [team, setTeam] = useState("")
   const router = useRouter()
-  const { authUser, setAuthUser } = useAuthContext()
+  const {  setAuthUser } = useAuthContext()
   const handleLoginOrSignup = async () => {
-    const url = type === "signup" ? `${baseUrl}/signup` : `${baseUrl}/login`;
+    const url = type === "signup" ? `/signup` : `/login`;
     console.log(url)
     const payload: Payload = { email, password };
 
@@ -29,7 +29,7 @@ const AuthPage = ({ type }: { type: 'login' | 'signup' }) => {
       payload.team_name = team
     }
 
-    const res = await fetch(url, {
+    const res = await fetch(baseUrl + url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

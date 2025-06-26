@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
 from app.models.models import Feedback, User, Team, FeedbackRequest, Notification, RequestStatus
 from app.utils.auth import require_role, get_db, get_current_user
@@ -25,7 +25,7 @@ def submit_feedback(data: FeedbackCreate,
         strengths=data.strengths,
         areas_to_improve=data.areas_to_improve,
         sentiment=data.sentiment,
-        tags=",".join(data.tags),
+        tags=data.tags,
         is_anonymous=data.is_anonymous,
         timestamp=datetime.now(timezone.utc)
     )
@@ -53,11 +53,12 @@ def view_my_feedback(user: User  = Depends(get_current_user),
     if user.role.value == "employee":
         return db.query(Feedback).filter_by(employee_id=user.id).all()
     else:
+        print(user.id)
         feedback_list = db.query(Feedback).filter_by(manager_id=user.id).all()
         return feedback_list
 
 @router.get("/single/{feedback_id}")
-def get_single(feedback_id: int, data: FeedbackCreate,
+def get_single(feedback_id: int,
                   db: Session = Depends(get_db)):
     
     fb = db.query(Feedback).filter_by(id=feedback_id,).first()
@@ -83,7 +84,6 @@ def acknowledge(feedback_id: int, user: User = Depends(require_role("employee"))
 @router.get("/team/members")
 def get_team_members(user: User = Depends(require_role("manager")), db: Session = Depends(get_db)):
     return db.query(User).filter_by(team_id=user.id, role="employee").all()
-
 
 @router.post("/request", response_model=FeedbackRequestOut)
 def request_feedback(message_data: FeedbackRequestIn,
@@ -114,7 +114,7 @@ def get_feedback_requests(db: Session = Depends(get_db),
     return db.query(FeedbackRequest).filter_by(manager_id=manager.id, status="pending").all()
 
 
-@router.patch("/requests/{request_id}", response_model=FeedbackRequestOut)
+@router.patch("/request/{request_id}", response_model=FeedbackRequestOut)
 def respond_to_feedback_request(request_id: int, 
                                 new_status: str,
                                 db: Session = Depends(get_db),
@@ -124,7 +124,7 @@ def respond_to_feedback_request(request_id: int,
         raise HTTPException(404, detail="Request not found")
 
     req.status = cast(RequestStatus, new_status)
-
+    setattr(req, "status", new_status )
     db.add(Notification(
         user_id=req.employee_id,
         message=f"Your feedback request was marked as '{new_status}'"
@@ -132,5 +132,24 @@ def respond_to_feedback_request(request_id: int,
 
     db.commit()
     return req
+
+@router.delete("/requests/{request_id}", status_code=204)
+def reject_feedback_request(
+    request_id: int,
+    db: Session = Depends(get_db),
+    manager: User = Depends(require_role("manager"))
+):
+    req = db.query(FeedbackRequest).filter_by(id=request_id, manager_id=manager.id).first()
+    if not req:
+        raise HTTPException(404, detail="Request not found")
+
+    db.add(Notification(
+        user_id=req.employee_id,
+        message="Your feedback request was rejected"
+    ))
+
+    db.delete(req)
+    db.commit()
+    return Response(status_code=204)
 
 

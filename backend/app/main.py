@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.routes import user, feedback, dashboard
+from app.routes import user, feedback, dashboard, notification
 from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -16,3 +16,4 @@ app.add_middleware(
 app.include_router(user.router)
 app.include_router(feedback.router)
 app.include_router(dashboard.router)
+app.include_router(notification.router)
